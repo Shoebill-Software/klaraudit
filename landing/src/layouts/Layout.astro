@@ -1,0 +1,54 @@
+---
+import '../styles/global.css';
+import { copyFor, localePath, ogLocale, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const copy = copyFor(lang);
+const origin = Astro.site ?? Astro.url;
+const canonical = new URL(Astro.url.pathname, origin).href;
+---
+
+<!doctype html>
+<html lang={lang} class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={copy.meta.description} />
+    <meta name="theme-color" content="#faf9f5" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="en" href={new URL(localePath.en, origin).href} />
+    <link rel="alternate" hreflang="de" href={new URL(localePath.de, origin).href} />
+    <link rel="alternate" hreflang="es" href={new URL(localePath.es, origin).href} />
+    <link rel="alternate" hreflang="x-default" href={new URL(localePath.en, origin).href} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={copy.meta.title} />
+    <meta property="og:description" content={copy.meta.description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="KlarAudit" />
+    <meta property="og:locale" content={ogLocale[lang]} />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={copy.meta.title} />
+    <meta name="twitter:description" content={copy.meta.description} />
+
+    <title>{copy.meta.title}</title>
+  </head>
+  <body
+    class="min-h-screen bg-[#faf9f5] font-sans text-slate-900 antialiased selection:bg-slate-900 selection:text-[#faf9f5]"
+  >
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:border focus:border-slate-300 focus:bg-[#faf9f5] focus:px-3 focus:py-2 focus:text-sm"
+    >
+      {copy.meta.skip}
+    </a>
+    <slot />
+  </body>
+</html>

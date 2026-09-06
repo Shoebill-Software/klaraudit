@@ -1,0 +1,78 @@
+---
+import { copyFor, githubUrl, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const copy = copyFor(lang);
+const lemonLifetime = 'https://fenneq.lemonsqueezy.com/buy/klaraudit-agency-pro';
+---
+
+<section id="license" class="scroll-mt-16 border-b border-slate-300">
+  <div class="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
+    <p class="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-500">
+      {copy.pricing.eyebrow}
+    </p>
+    <h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
+      {copy.pricing.title}
+    </h2>
+    <p class="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">
+      {copy.pricing.lead}
+    </p>
+
+    <div class="mt-8 overflow-x-auto border border-slate-300 bg-white">
+      <table class="w-full min-w-[640px] border-collapse text-left text-sm">
+        <thead class="border-b border-slate-300 bg-[#faf9f5]">
+          <tr>
+            <th class="px-4 py-3 font-mono text-[11px] font-medium uppercase tracking-wide text-slate-500">
+              {copy.pricing.colFeature}
+            </th>
+            <th class="px-4 py-3">
+              <span class="block text-sm font-semibold text-slate-900">{copy.pricing.colFree}</span>
+              <span class="mt-1 block font-mono text-[11px] text-emerald-700">{copy.pricing.freeTag}</span>
+            </th>
+            <th class="px-4 py-3">
+              <span class="block text-sm font-semibold text-slate-900">{copy.pricing.colAgency}</span>
+              <span class="mt-1 block font-mono text-[11px] text-slate-600">{copy.pricing.agencyTag}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            copy.pricing.rows.map((row) => (
+              <tr class="border-t border-slate-200">
+                <th class="px-4 py-3 font-medium text-slate-700">{row.feature}</th>
+                <td class="px-4 py-3 text-slate-600">{row.free}</td>
+                <td class="px-4 py-3 text-slate-600">{row.agency}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm">
+      <a
+        href={githubUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="border border-slate-300 px-3 py-2 text-slate-800 hover:border-slate-900 hover:text-slate-900"
+      >
+        {copy.pricing.ctaGithub}
+      </a>
+      <a
+        href={lemonLifetime}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="border border-slate-900 bg-slate-900 px-3 py-2 text-[#faf9f5] hover:bg-slate-800"
+      >
+        {copy.pricing.ctaBuy}
+      </a>
+    </div>
+    <p class="mt-4 max-w-2xl text-xs leading-relaxed text-slate-500">
+      {copy.pricing.footnote}
+    </p>
+  </div>
+</section>

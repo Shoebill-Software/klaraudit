@@ -1,0 +1,76 @@
+---
+import { copyFor, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const copy = copyFor(lang);
+
+function severityClass(severity: string): string {
+  if (severity === 'CRITICAL' || severity === 'HIGH') return 'text-rose-700';
+  if (severity === 'MEDIUM') return 'text-amber-600';
+  if (severity === 'LOW') return 'text-slate-600';
+  return 'text-emerald-700';
+}
+
+function bandClass(status: string): string {
+  if (status === 'COMPLIANT') return 'text-emerald-700';
+  if (status === 'WARNING') return 'text-amber-600';
+  return 'text-rose-700';
+}
+---
+
+<section id="scoring" class="scroll-mt-16 border-b border-slate-300">
+  <div class="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
+    <p class="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-500">
+      {copy.rules.eyebrow}
+    </p>
+    <h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
+      {copy.rules.title}
+    </h2>
+    <p class="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">
+      {copy.rules.lead}
+    </p>
+
+    <div class="mt-8 overflow-x-auto border border-slate-300 bg-white">
+      <table class="w-full min-w-[720px] border-collapse text-left text-sm">
+        <thead class="border-b border-slate-300 bg-[#faf9f5] font-mono text-[11px] uppercase tracking-wide text-slate-500">
+          <tr>
+            <th class="px-4 py-3 font-medium">{copy.rules.colCategory}</th>
+            <th class="px-4 py-3 font-medium">{copy.rules.colSeverity}</th>
+            <th class="px-4 py-3 font-medium">{copy.rules.colDeduction}</th>
+            <th class="px-4 py-3 font-medium">{copy.rules.colCriteria}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            copy.rules.items.map((rule) => (
+              <tr class="align-top border-t border-slate-200">
+                <td class="px-4 py-4 font-medium text-slate-900">{rule.category}</td>
+                <td class:list={['px-4 py-4 font-mono text-xs font-semibold', severityClass(rule.severity)]}>
+                  {rule.severity}
+                </td>
+                <td class="whitespace-nowrap px-4 py-4 font-mono text-xs text-rose-700">{rule.deduction}</td>
+                <td class="px-4 py-4 text-slate-600">{rule.criteria}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-6 grid gap-px border border-slate-300 bg-slate-300 sm:grid-cols-3">
+      {
+        copy.rules.bands.map((band) => (
+          <div class="bg-[#faf9f5] px-4 py-4">
+            <p class="font-mono text-[11px] text-slate-500">{band.range}</p>
+            <p class:list={['mt-1 font-mono text-sm font-semibold', bandClass(band.status)]}>{band.status}</p>
+            <p class="mt-1 text-sm text-slate-600">{band.note}</p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

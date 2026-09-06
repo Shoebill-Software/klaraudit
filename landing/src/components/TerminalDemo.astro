@@ -1,0 +1,82 @@
+---
+import { copyFor, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const copy = copyFor(lang);
+
+function severityClass(severity: string): string {
+  if (severity === 'CRITICAL') return 'text-rose-700';
+  if (severity === 'HIGH') return 'text-rose-700';
+  if (severity === 'MEDIUM') return 'text-amber-600';
+  return 'text-emerald-700';
+}
+---
+
+<section class="border-b border-slate-300">
+  <div class="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
+    <p class="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-500">
+      {copy.terminal.eyebrow}
+    </p>
+    <h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
+      {copy.terminal.title}
+    </h2>
+    <p class="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">
+      {copy.terminal.body}
+    </p>
+
+    <div class="mt-8 border border-slate-300 bg-slate-900 text-slate-100">
+      <div class="flex items-center justify-between border-b border-slate-700 px-3 py-2">
+        <p class="truncate font-mono text-[11px] text-slate-400">{copy.terminal.windowTitle}</p>
+        <p class="hidden font-mono text-[11px] text-rose-400 sm:block">NON_COMPLIANT</p>
+      </div>
+
+      <div class="space-y-1 overflow-x-auto p-4 font-mono text-[12px] leading-relaxed sm:p-5 sm:text-[13px]">
+        <p class="text-slate-400">$ {copy.terminal.scanning}</p>
+        <p class="text-slate-500">  {copy.terminal.intercept}</p>
+        <p class="text-slate-500">  {copy.terminal.targets}</p>
+        <p class="text-rose-400">  {copy.terminal.gtm}</p>
+        <p class="text-rose-400">  {copy.terminal.fonts}</p>
+        <p class="text-amber-400">  {copy.terminal.banner}</p>
+        <p class="text-emerald-400">  {copy.terminal.pages}</p>
+        <p class="pt-2 text-slate-200">{copy.terminal.score}</p>
+        <p class="text-rose-400">{copy.terminal.status}</p>
+
+        <div class="mt-4 overflow-x-auto border border-slate-700">
+          <table class="w-full min-w-[640px] border-collapse text-left">
+            <thead class="bg-slate-800 text-[11px] uppercase tracking-wide text-slate-400">
+              <tr>
+                <th class="px-3 py-2 font-medium">{copy.terminal.colSeverity}</th>
+                <th class="px-3 py-2 font-medium">{copy.terminal.colCategory}</th>
+                <th class="px-3 py-2 font-medium">{copy.terminal.colFinding}</th>
+                <th class="px-3 py-2 font-medium">{copy.terminal.colDelta}</th>
+                <th class="px-3 py-2 font-medium">{copy.terminal.colFix}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                copy.terminal.findings.map((row) => (
+                  <tr class="border-t border-slate-700">
+                    <td class:list={['px-3 py-2 font-semibold', severityClass(row.severity)]}>
+                      {row.severity}
+                    </td>
+                    <td class="px-3 py-2 text-slate-400">{row.category}</td>
+                    <td class="px-3 py-2 text-slate-200">{row.finding}</td>
+                    <td class="px-3 py-2 text-rose-400">{row.deduction}</td>
+                    <td class="px-3 py-2 text-slate-400">{row.fix}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <p class="pt-3 text-rose-400">{copy.terminal.ciFail}</p>
+        <p class="text-slate-500">{copy.terminal.exit}</p>
+      </div>
+    </div>
+  </div>
+</section>

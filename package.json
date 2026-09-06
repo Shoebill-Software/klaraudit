@@ -1,0 +1,42 @@
+{
+  "name": "klaraudit",
+  "version": "0.1.0",
+  "description": "Zero-cloud headless CLI scanner for EU GDPR, e-Privacy, and Schrems II compliance",
+  "type": "module",
+  "bin": {
+    "klaraudit": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc && node scripts/copy-templates.mjs",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "gdpr",
+    "privacy",
+    "compliance",
+    "cli",
+    "scanner"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "cli-table3": "^0.6.5",
+    "commander": "^13.1.0",
+    "geoip-lite": "^1.4.10",
+    "handlebars": "^4.7.8",
+    "ora": "^8.2.0",
+    "playwright-core": "1.63.0"
+  },
+  "devDependencies": {
+    "@types/geoip-lite": "^1.4.4",
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.8"
+  }
+}

@@ -1,0 +1,22 @@
+# Dependencies and build output
+node_modules
+dist
+
+# VCS and editor metadata
+.git
+.github
+.cursor
+.cursorrules
+.vscode
+.idea
+
+# Reports, logs, and local env
+*.pdf
+*.log
+.env
+.env.*
+coverage
+
+# Tests and docs are not needed to compile the CLI
+**/*.test.ts
+**/*.md

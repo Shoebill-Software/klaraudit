@@ -1,0 +1,38 @@
+---
+import { copyFor, githubUrl, licenseUrl, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const copy = copyFor(lang);
+---
+
+<footer class="bg-[#faf9f5]">
+  <div class="mx-auto max-w-5xl px-4 py-12 sm:px-6">
+    <div class="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+      <div class="max-w-xl">
+        <p class="text-sm font-semibold text-slate-900">{copy.footer.product}</p>
+        <p class="mt-2 text-sm text-slate-600">{copy.footer.blurb}</p>
+        <p class="mt-4 text-xs leading-relaxed text-slate-500">
+          {copy.footer.disclaimer}
+        </p>
+      </div>
+      <nav class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600" aria-label="Footer">
+        <a href="#manifest" class="hover:text-slate-900">{copy.nav.manifest}</a>
+        <a href="#scoring" class="hover:text-slate-900">{copy.nav.scoring}</a>
+        <a href="#license" class="hover:text-slate-900">{copy.nav.license}</a>
+        <a href={githubUrl} target="_blank" rel="noopener noreferrer" class="hover:text-slate-900">
+          {copy.nav.github}
+        </a>
+        <a href={licenseUrl} target="_blank" rel="noopener noreferrer" class="hover:text-slate-900">
+          {copy.footer.license}
+        </a>
+      </nav>
+    </div>
+    <p class="mt-10 border-t border-slate-300 pt-6 font-mono text-xs text-slate-500">
+      {copy.footer.builtBy}
+    </p>
+  </div>
+</footer>

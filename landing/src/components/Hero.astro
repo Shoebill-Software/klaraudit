@@ -1,0 +1,122 @@
+---
+import { copyFor, githubUrl, scanCommand, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const copy = copyFor(lang);
+---
+
+<section id="top" class="border-b border-slate-300">
+  <div class="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
+    <p class="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-500">
+      {copy.hero.kicker}
+    </p>
+
+    <h1 class="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl sm:leading-tight">
+      {copy.hero.headline}
+    </h1>
+
+    <p class="mt-5 max-w-2xl text-base leading-relaxed text-slate-600">
+      {copy.hero.subhead}
+    </p>
+
+    <div class="mt-10 max-w-2xl">
+      <label class="mb-2 block font-mono text-[11px] uppercase tracking-[0.14em] text-slate-500" for="scan-command">
+        {copy.hero.commandLabel}
+      </label>
+      <div class="flex items-stretch border border-slate-300 bg-white">
+        <div class="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 font-mono text-sm text-slate-900">
+          <span class="shrink-0 text-slate-400" aria-hidden="true">$</span>
+          <code id="scan-command" class="truncate select-all">{scanCommand}</code>
+        </div>
+        <button
+          type="button"
+          id="copy-command"
+          data-command={scanCommand}
+          data-copy-label={copy.hero.copy}
+          data-copied-label={copy.hero.copiedShort}
+          data-copied-status={copy.hero.copied}
+          data-failed-label={copy.hero.copyFailed}
+          class="shrink-0 border-l border-slate-300 px-4 font-mono text-xs text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+        >
+          {copy.hero.copy}
+        </button>
+      </div>
+      <p id="copy-status" class="mt-2 min-h-[1.25rem] font-mono text-xs text-slate-500" role="status" aria-live="polite"></p>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+      <a href="#cicd" class="text-slate-700 underline decoration-slate-300 underline-offset-4 hover:text-slate-900 hover:decoration-slate-900">
+        {copy.hero.cicd}
+      </a>
+      <a
+        href={githubUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-slate-600 hover:text-slate-900"
+      >
+        {copy.hero.source}
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  const button = document.getElementById('copy-command');
+  const status = document.getElementById('copy-status');
+  const command = button?.dataset.command ?? '';
+  const copyLabel = button?.dataset.copyLabel ?? 'Copy';
+  const copiedLabel = button?.dataset.copiedLabel ?? 'Copied';
+  const copiedStatus = button?.dataset.copiedStatus ?? copiedLabel;
+  const failedLabel = button?.dataset.failedLabel ?? 'Copy failed.';
+
+  function fallbackCopy(text: string): void {
+    const field = document.createElement('textarea');
+    field.value = text;
+    field.setAttribute('readonly', '');
+    field.style.position = 'fixed';
+    field.style.left = '-9999px';
+    document.body.appendChild(field);
+    field.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(field);
+    if (!ok) {
+      throw new Error('execCommand copy failed');
+    }
+  }
+
+  async function copyCommand() {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(command);
+      } else {
+        fallbackCopy(command);
+      }
+      if (status) status.textContent = copiedStatus;
+      if (button) button.textContent = copiedLabel;
+      window.setTimeout(() => {
+        if (button) button.textContent = copyLabel;
+        if (status) status.textContent = '';
+      }, 1800);
+    } catch {
+      try {
+        fallbackCopy(command);
+        if (status) status.textContent = copiedStatus;
+        if (button) button.textContent = copiedLabel;
+        window.setTimeout(() => {
+          if (button) button.textContent = copyLabel;
+          if (status) status.textContent = '';
+        }, 1800);
+      } catch {
+        if (status) status.textContent = failedLabel;
+      }
+    }
+  }
+
+  button?.addEventListener('click', () => {
+    void copyCommand();
+  });
+</script>

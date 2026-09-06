@@ -1,0 +1,54 @@
+# Sample merge gate: drop KlarAudit into a CI pipeline to scan staging
+# before merging pull requests. --ci fails the job on CRITICAL or HIGH findings.
+#
+# Setup:
+#   Set repository variable KLARAUDIT_STAGING_URL (e.g. https://staging.example.com).
+#
+# Teams that publish this image can skip the build step and run:
+#   docker run --rm --init --ipc=host ghcr.io/<org>/klaraudit scan "$STAGING_URL" --ci --format json
+
+name: Compliance Gate
+
+on:
+  pull_request:
+    branches: [main, master]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      staging_url:
+        description: Staging URL to scan
+        required: true
+        type: string
+
+concurrency:
+  group: compliance-gate-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  scan-staging:
+    name: Scan staging URL
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      STAGING_URL: ${{ github.event.inputs.staging_url || vars.KLARAUDIT_STAGING_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require staging URL
+        run: |
+          if [ -z "$STAGING_URL" ]; then
+            echo "Set repository variable KLARAUDIT_STAGING_URL to the pre-production URL that must pass before merge."
+            exit 1
+          fi
+
+      - name: Build KlarAudit image
+        run: docker build -t klaraudit .
+
+      - name: Run KlarAudit against staging
+        run: >
+          docker run --rm --init --ipc=host
+          klaraudit scan "$STAGING_URL" --ci --format json

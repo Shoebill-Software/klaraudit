@@ -1,0 +1,26 @@
+---
+import type { Lang } from '../i18n/ui';
+import Navbar from './Navbar.astro';
+import Hero from './Hero.astro';
+import TerminalDemo from './TerminalDemo.astro';
+import AuditManifest from './AuditManifest.astro';
+import Rules from './Rules.astro';
+import Pricing from './Pricing.astro';
+import Footer from './Footer.astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+---
+
+<Navbar lang={lang} />
+<main id="main">
+  <Hero lang={lang} />
+  <TerminalDemo lang={lang} />
+  <AuditManifest lang={lang} />
+  <Rules lang={lang} />
+  <Pricing lang={lang} />
+</main>
+<Footer lang={lang} />

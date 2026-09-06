@@ -1,0 +1,150 @@
+---
+import { copyFor, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const copy = copyFor(lang);
+
+function severityClass(severity: string): string {
+  if (severity === 'CRITICAL' || severity === 'HIGH') return 'text-rose-700';
+  if (severity === 'MEDIUM' || severity === 'GATE') return 'text-amber-600';
+  return 'text-emerald-700';
+}
+---
+
+<section id="manifest" class="scroll-mt-16 border-b border-slate-300">
+  <div class="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
+    <div class="flex flex-wrap items-end justify-between gap-3 border-b border-slate-300 pb-6">
+      <div class="max-w-2xl">
+        <p class="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-500">
+          {copy.manifest.eyebrow}
+        </p>
+        <h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
+          {copy.manifest.title}
+        </h2>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">
+          {copy.manifest.lead}
+        </p>
+      </div>
+      <dl class="font-mono text-[11px] leading-5 text-slate-500">
+        <div class="flex gap-2">
+          <dt class="sr-only">Document</dt>
+          <dd>{copy.manifest.doc}</dd>
+        </div>
+        <div>
+          <dt class="sr-only">Scope</dt>
+          <dd>{copy.manifest.scope}</dd>
+        </div>
+        <div>
+          <dt class="sr-only">Engine</dt>
+          <dd>{copy.manifest.engine}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <ol class="divide-y divide-slate-300">
+      {
+        copy.manifest.rows.map((row, index) => (
+          <li
+            id={index === 3 ? 'cicd' : undefined}
+            class="scroll-mt-16 py-8"
+          >
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+              <div>
+                <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span class="font-mono text-sm text-slate-400">{row.index}</span>
+                  <h3 class="text-lg font-semibold text-slate-900">{row.title}</h3>
+                </div>
+                <p class="mt-2 font-mono text-[11px] text-slate-500">
+                  <span class={severityClass(row.severity)}>{row.severity}</span>
+                  <span class="px-2 text-slate-300">/</span>
+                  <span>{row.code}</span>
+                </p>
+                <p class="mt-3 max-w-xl text-sm leading-relaxed text-slate-600">{row.body}</p>
+                <p class="mt-3 font-mono text-[11px] text-slate-500">
+                  REF: {row.refs}
+                </p>
+              </div>
+
+              <div class="compare-box border border-slate-300 bg-white" data-compare data-active="regulator">
+                <div class="flex border-b border-slate-300 font-mono text-[11px] md:hidden">
+                  <button
+                    type="button"
+                    class="flex-1 px-3 py-2 text-slate-900"
+                    data-compare-tab="regulator"
+                    aria-pressed="true"
+                  >
+                    {copy.manifest.regulator}
+                  </button>
+                  <button
+                    type="button"
+                    class="flex-1 border-l border-slate-300 px-3 py-2 text-slate-500"
+                    data-compare-tab="cli"
+                    aria-pressed="false"
+                  >
+                    {copy.manifest.cli}
+                  </button>
+                </div>
+                <div class="grid md:grid-cols-2">
+                  <article
+                    data-compare-pane="regulator"
+                    class="border-b border-slate-300 p-4 md:border-b-0 md:border-r"
+                  >
+                    <p class="hidden font-mono text-[10px] uppercase tracking-[0.12em] text-slate-500 md:block">
+                      {copy.manifest.regulator}
+                    </p>
+                    <p class="text-sm leading-relaxed text-slate-700 md:mt-2">{row.regulator}</p>
+                  </article>
+                  <article data-compare-pane="cli" class="p-4">
+                    <p class="hidden font-mono text-[10px] uppercase tracking-[0.12em] text-slate-500 md:block">
+                      {copy.manifest.cli}
+                    </p>
+                    <pre class="whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-slate-800 md:mt-2">{row.cli}</pre>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  @media (max-width: 767px) {
+    [data-compare][data-active='regulator'] [data-compare-pane='cli'],
+    [data-compare][data-active='cli'] [data-compare-pane='regulator'] {
+      display: none;
+    }
+
+    [data-compare][data-active='cli'] [data-compare-pane='cli'] {
+      border-bottom-width: 0;
+    }
+  }
+</style>
+
+<script>
+  const compares = document.querySelectorAll('[data-compare]');
+
+  compares.forEach((root) => {
+    const tabs = root.querySelectorAll<HTMLButtonElement>('[data-compare-tab]');
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.compareTab;
+        if (!target) return;
+        root.setAttribute('data-active', target);
+        tabs.forEach((item) => {
+          const active = item === tab;
+          item.setAttribute('aria-pressed', String(active));
+          item.classList.toggle('text-slate-900', active);
+          item.classList.toggle('text-slate-500', !active);
+        });
+      });
+    });
+  });
+</script>

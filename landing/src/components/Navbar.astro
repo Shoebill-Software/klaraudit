@@ -1,0 +1,89 @@
+---
+import {
+  VERSION,
+  copyFor,
+  githubUrl,
+  languages,
+  localePath,
+  type Lang,
+} from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const copy = copyFor(lang);
+
+const links = [
+  { href: '#manifest', label: copy.nav.manifest },
+  { href: '#scoring', label: copy.nav.scoring },
+  { href: '#license', label: copy.nav.license },
+];
+
+const locales = (Object.keys(languages) as Lang[]).map((code) => ({
+  code,
+  href: localePath[code],
+  label: languages[code],
+  current: code === lang,
+}));
+---
+
+<header class="sticky top-0 z-50 border-b border-slate-300 bg-[#faf9f5]">
+  <nav
+    class="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-6"
+    aria-label="Primary"
+  >
+    <a href="#top" class="flex items-baseline gap-2 text-slate-900">
+      <span class="text-sm font-semibold tracking-tight">KlarAudit</span>
+      <span class="font-mono text-[11px] text-slate-500">v{VERSION}</span>
+    </a>
+
+    <div class="flex flex-wrap items-baseline gap-x-5 gap-y-2 text-sm">
+      {
+        links.map((link) => (
+          <a href={link.href} class="text-slate-600 hover:text-slate-900">
+            {link.label}
+          </a>
+        ))
+      }
+
+      <nav class="font-mono text-[11px] tracking-wide text-slate-500" aria-label={copy.nav.lang}>
+        <span aria-hidden="true">[</span>
+        {
+          locales.map((locale, index) => (
+            <>
+              {index > 0 && (
+                <span class="px-1 text-slate-400" aria-hidden="true">
+                  |
+                </span>
+              )}
+              <a
+                href={locale.href}
+                class:list={[
+                  'px-0.5',
+                  locale.current ? 'font-semibold text-slate-900' : 'text-slate-500 hover:text-slate-900',
+                ]}
+                hreflang={locale.code}
+                lang={locale.code}
+                aria-current={locale.current ? 'page' : undefined}
+              >
+                {locale.label}
+              </a>
+            </>
+          ))
+        }
+        <span aria-hidden="true">]</span>
+      </nav>
+
+      <a
+        href={githubUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="border border-slate-300 px-2 py-0.5 text-xs text-slate-700 hover:border-slate-900 hover:text-slate-900"
+      >
+        {copy.nav.github}
+      </a>
+    </div>
+  </nav>
+</header>

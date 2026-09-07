@@ -145,4 +145,4 @@ npx --yes klaraudit scan "$TARGET_URL" --ci --format json
 
 ## Attribution & license
 
-MIT License. Built by **[Fenneq Software](https://github.com/fenneq-software)**.
+MIT License. Built by **[Shoebill Software](https://www.shoebill-software.de/)**.

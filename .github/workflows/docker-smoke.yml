@@ -1,0 +1,32 @@
+name: Docker Smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  smoke:
+    name: Pull and run published image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Help output
+        run: >
+          docker run --rm --init --ipc=host
+          ghcr.io/shoebill-software/klaraudit:0.1.0
+          --help
+
+      - name: Version output
+        run: >
+          docker run --rm --init --ipc=host
+          ghcr.io/shoebill-software/klaraudit:0.1.0
+          --version
+
+      - name: Scan example.com
+        run: >
+          docker run --rm --init --ipc=host
+          ghcr.io/shoebill-software/klaraudit:0.1.0
+          scan https://example.com --format json --timeout 30000

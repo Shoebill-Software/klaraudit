@@ -13,6 +13,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Anonymous pull check
+        id: anon
+        continue-on-error: true
+        run: |
+          if docker pull ghcr.io/shoebill-software/klaraudit:0.1.0; then
+            echo "public=true" >> "$GITHUB_OUTPUT"
+            echo "Anonymous pull succeeded (package is public)."
+          else
+            echo "public=false" >> "$GITHUB_OUTPUT"
+            echo "Anonymous pull failed (package may still be private)."
+          fi
+
+      - name: Authenticated pull
+        if: steps.anon.outputs.public != 'true'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker pull ghcr.io/shoebill-software/klaraudit:0.1.0
+
       - name: Help output
         run: >
           docker run --rm --init --ipc=host

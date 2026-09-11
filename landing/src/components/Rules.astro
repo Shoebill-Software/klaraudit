@@ -34,9 +34,9 @@ function bandClass(status: string): string {
       {copy.rules.lead}
     </p>
 
-    <div class="mt-8 overflow-x-auto border border-slate-300 bg-white">
-      <table class="w-full min-w-[720px] border-collapse text-left text-sm">
-        <thead class="border-b border-slate-300 bg-[#faf9f5] font-mono text-[11px] uppercase tracking-wide text-slate-500">
+    <div class="mt-8 border border-slate-300 bg-white md:overflow-x-auto">
+      <table class="w-full border-collapse text-left text-sm md:min-w-[720px]">
+        <thead class="hidden border-b border-slate-300 bg-[#faf9f5] font-mono text-[11px] uppercase tracking-wide text-slate-500 md:table-header-group">
           <tr>
             <th class="px-4 py-3 font-medium">{copy.rules.colCategory}</th>
             <th class="px-4 py-3 font-medium">{copy.rules.colSeverity}</th>
@@ -44,16 +44,22 @@ function bandClass(status: string): string {
             <th class="px-4 py-3 font-medium">{copy.rules.colCriteria}</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="block md:table-row-group">
           {
             copy.rules.items.map((rule) => (
-              <tr class="align-top border-t border-slate-200">
-                <td class="px-4 py-4 font-medium text-slate-900">{rule.category}</td>
-                <td class:list={['px-4 py-4 font-mono text-xs font-semibold', severityClass(rule.severity)]}>
+              <tr class="block border-t border-slate-200 first:border-t-0 md:table-row md:align-top md:first:border-t">
+                <td class="block px-4 pb-0.5 pt-3 font-medium text-slate-900 md:table-cell md:px-4 md:py-4">
+                  {rule.category}
+                </td>
+                <td class:list={['block px-4 py-0.5 font-mono text-xs font-semibold md:table-cell md:px-4 md:py-4', severityClass(rule.severity)]}>
                   {rule.severity}
                 </td>
-                <td class="whitespace-nowrap px-4 py-4 font-mono text-xs text-rose-700">{rule.deduction}</td>
-                <td class="px-4 py-4 text-slate-600">{rule.criteria}</td>
+                <td class="block px-4 py-0.5 font-mono text-xs text-rose-700 md:table-cell md:whitespace-nowrap md:px-4 md:py-4">
+                  {rule.deduction}
+                </td>
+                <td class="block px-4 pb-3 pt-1.5 leading-relaxed text-slate-600 md:table-cell md:px-4 md:py-4">
+                  {rule.criteria}
+                </td>
               </tr>
             ))
           }

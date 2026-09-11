@@ -1,5 +1,5 @@
 ---
-import { copyFor, githubUrl, licenseUrl, type Lang } from '../i18n/ui';
+import { copyFor, githubUrl, licenseUrl, companyUrl, type Lang } from '../i18n/ui';
 
 interface Props {
   lang: Lang;
@@ -32,7 +32,9 @@ const copy = copyFor(lang);
       </nav>
     </div>
     <p class="mt-10 border-t border-slate-300 pt-6 font-mono text-xs text-slate-500">
-      {copy.footer.builtBy}
+      <a href={companyUrl} target="_blank" rel="noopener noreferrer" class="hover:text-slate-900">
+        {copy.footer.builtBy}
+      </a>
     </p>
   </div>
 </footer>

@@ -10,8 +10,9 @@ export const defaultLang: Lang = 'en';
 
 export const VERSION = '0.1.0';
 
-export const githubUrl = 'https://github.com/fenneq-software/klaraudit';
-export const licenseUrl = 'https://github.com/fenneq-software/klaraudit/blob/main/LICENSE';
+export const githubUrl = 'https://github.com/Shoebill-Software/klaraudit';
+export const licenseUrl = 'https://github.com/Shoebill-Software/klaraudit/blob/main/LICENSE';
+export const companyUrl = 'https://www.shoebill-software.de/';
 export const scanCommand = 'npx klaraudit scan https://example.com';
 
 export const localePath: Record<Lang, string> = {
@@ -30,7 +31,7 @@ const en = {
   meta: {
     title: 'KlarAudit: Audit your website before European regulators do',
     description:
-      'Local CLI scanner for GDPR, ePrivacy, and Schrems II issues. Intercepts GTM, Meta Pixel, and Google Fonts before consent. Offline GeoIP. Deterministic CI exit codes. Built by Fenneq Software.',
+      'Local CLI scanner for GDPR, ePrivacy, and Schrems II issues. Intercepts GTM, Meta Pixel, and Google Fonts before consent. Offline GeoIP. Deterministic CI exit codes. Built by Shoebill Software.',
     skip: 'Skip to content',
   },
   nav: {
@@ -239,7 +240,7 @@ const en = {
     disclaimer:
       'KlarAudit is a technical inspection tool. Findings are heuristics, not legal advice, and do not replace qualified counsel. Administrative fines under Article 83 GDPR and German warning letters (Abmahnungen) depend on facts a first-paint scan cannot fully establish.',
     license: 'MIT License',
-    builtBy: 'Built by Fenneq Software.',
+    builtBy: 'Built by Shoebill Software.',
   },
 };
 
@@ -247,7 +248,7 @@ const de = {
   meta: {
     title: 'KlarAudit: Websites auf DSGVO- und ePrivacy-Verstöße prüfen',
     description:
-      'Lokaler CLI-Scanner für DSGVO, ePrivacy und Schrems II. Fängt GTM, Meta Pixel und Google Fonts vor der Einwilligung ab. Offline-GeoIP. Deterministische CI-Exit-Codes. Entwickelt von Fenneq Software.',
+      'Lokaler CLI-Scanner für DSGVO, ePrivacy und Schrems II. Fängt GTM, Meta Pixel und Google Fonts vor der Einwilligung ab. Offline-GeoIP. Deterministische CI-Exit-Codes. Entwickelt von Shoebill Software.',
     skip: 'Zum Inhalt springen',
   },
   nav: {
@@ -456,7 +457,7 @@ const de = {
     disclaimer:
       'KlarAudit ist ein technisches Prüfwerkzeug. Befunde sind Heuristiken, keine Rechtsberatung, und ersetzen keinen qualifizierten Rechtsrat. Bußgelder nach Art. 83 DSGVO und Abmahnungen hängen von Sachverhalten ab, die ein First-Paint-Scan nicht vollständig feststellen kann.',
     license: 'MIT-Lizenz',
-    builtBy: 'Erstellt von Fenneq Software.',
+    builtBy: 'Erstellt von Shoebill Software.',
   },
 };
 
@@ -464,7 +465,7 @@ const es = {
   meta: {
     title: 'KlarAudit: Audita tu sitio web antes de que intervengan los reguladores europeos',
     description:
-      'Escáner CLI local para RGPD, ePrivacy y Schrems II. Intercepta GTM, Meta Pixel y Google Fonts antes del consentimiento. GeoIP sin conexión. Códigos de salida CI deterministas. Desarrollado por Fenneq Software.',
+      'Escáner CLI local para RGPD, ePrivacy y Schrems II. Intercepta GTM, Meta Pixel y Google Fonts antes del consentimiento. GeoIP sin conexión. Códigos de salida CI deterministas. Desarrollado por Shoebill Software.',
     skip: 'Saltar al contenido',
   },
   nav: {
@@ -673,7 +674,7 @@ const es = {
     disclaimer:
       'KlarAudit es una herramienta de inspección técnica. Los hallazgos son heurísticas, no asesoramiento jurídico, y no sustituyen a un letrado cualificado. Las multas del artículo 83 del RGPD y los requerimientos alemanes (Abmahnungen) dependen de hechos que un escaneo de first paint no puede establecer por completo.',
     license: 'Licencia MIT',
-    builtBy: 'Desarrollado por Fenneq Software.',
+    builtBy: 'Desarrollado por Shoebill Software.',
   },
 };
 

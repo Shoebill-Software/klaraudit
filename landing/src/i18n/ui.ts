@@ -57,14 +57,14 @@ const en = {
   terminal: {
     eyebrow: 'Sample trace',
     title: 'What the CLI prints on a failing first paint',
-    body: 'KlarAudit does not click Accept. It watches the idle load, resolves remote IPs with a local GeoIP database, then scores the page. The trace below matches a representative NON_COMPLIANT run.',
+    body: 'KlarAudit does not click Accept. It watches the idle load, resolves remote IPs with a local GeoIP database, then scores the page with actionable evidence (URL, IP, GeoIP, fix). The trace below matches a representative NON_COMPLIANT run.',
     windowTitle: 'klaraudit scan https://shop.example.de --ci',
     scanning: 'Scanning https://shop.example.de  timeout=15000ms',
     intercept: 'intercept network (pre-consent, no click)',
     targets: 'targets: cookies, scripts, fonts, banner DOM, /impressum, /datenschutz',
-    gtm: 'FAIL  googletagmanager.com/gtag/js  tracker before consent',
-    fonts: 'FAIL  fonts.googleapis.com  142.250.185.196 (US)  unannotated transfer',
-    banner: 'FAIL  first-layer Reject / Ablehnen missing',
+    gtm: 'FAIL  Google Tag Manager  googletagmanager.com  before consent',
+    fonts: 'FAIL  Google Fonts  fonts.googleapis.com  142.250.185.196 · GeoIP US',
+    banner: 'FAIL  Reject / Ablehnen missing  while hosts: googletagmanager.com',
     pages: 'OK    /impressum 200  /datenschutz 200',
     score: 'Score  45 / 100',
     status: 'Status NON_COMPLIANT  (threshold < 60)',
@@ -79,21 +79,24 @@ const en = {
       {
         severity: 'CRITICAL',
         category: 'TRACKING_CONSENT',
-        finding: 'GTM fired before consent (googletagmanager.com)',
+        finding:
+          'Google Tag Manager (googletagmanager.com) loaded on first paint before any consent click',
         deduction: '-30',
-        fix: 'Block GTM/gtag until explicit opt-in.',
+        fix: 'Load GTM only after opt-in (Consent Mode / CMP gate).',
       },
       {
         severity: 'HIGH',
         category: 'CROSS_BORDER_TRANSFER',
-        finding: 'fonts.googleapis.com resolved to US IP 142.250.185.196',
+        finding:
+          'Google Fonts from fonts.googleapis.com resolved to IP 142.250.185.196 in US — visitor IP sent to Google before consent',
         deduction: '-15',
-        fix: 'Self-host fonts. Do not load Google Fonts on first paint.',
+        fix: 'Self-host fonts or load Google Fonts only after consent.',
       },
       {
         severity: 'MEDIUM',
         category: 'BANNER_DARK_PATTERN',
-        finding: 'No equal-prominence Reject / Ablehnen on first layer',
+        finding:
+          'Consent UI found, but no equal-prominence Reject / Ablehnen while third-party hosts are active',
         deduction: '-10',
         fix: 'Place Ablehnen beside Accept at the same visual weight.',
       },
@@ -118,40 +121,40 @@ const en = {
         refs: 'TTDSG / TDDDG § 25, GDPR Art. 6',
         regulator:
           'Warning-letter crawlers record googletagmanager.com and facebook.net on first paint. The visitor IP is already in a US processor log. Storage or access of information on the terminal equipment lacks a § 25 TDDDG basis.',
-        cli: 'TRACKING_CONSENT  CRITICAL  -30\nGTM fired before consent (googletagmanager.com)',
+        cli: 'TRACKING_CONSENT  CRITICAL  -30\nGoogle Tag Manager (googletagmanager.com)\nloaded on first paint before consent\nevidence: gtag/js URL · GeoIP US',
       },
       {
         index: '02',
         code: 'CROSS_BORDER_TRANSFER',
         severity: 'HIGH',
         title: 'Dynamic Cross-Border IP Leaks',
-        body: 'Detects US asset calls such as Google Fonts and unverified CDN hops. Remote IPs are classified with an offline GeoIP database. The scanner does not call a cloud lookup API.',
+        body: 'Detects Google Fonts, other non-EU third-party hosts, and first-party CDN/hosting edges (for example a Vercel edge outside the EU). Remote IPs are classified with an offline GeoIP database. The scanner does not call a cloud lookup API.',
         refs: 'LG München 3 O 17493/20, Schrems II',
         regulator:
           'LG München I held that loading Google Fonts from US servers without consent unlawfully transmits the visitor IP. Schrems II invalidated Privacy Shield. Unannotated US transfers remain an Art. 83 GDPR fine risk.',
-        cli: 'CROSS_BORDER_TRANSFER  HIGH  -15\nfonts.googleapis.com -> 142.250.185.196 (US)\nNo DPF/SCC annotation on the request path',
+        cli: 'CROSS_BORDER_TRANSFER  HIGH  -15\nGoogle Fonts fonts.googleapis.com\nIP 142.250.185.196 · GeoIP US\nSelf-host fonts or delay until consent',
       },
       {
         index: '03',
         code: 'BANNER_DARK_PATTERN',
         severity: 'MEDIUM',
         title: 'Consent Layer & Dark Patterns',
-        body: 'Validates the first-layer DOM for a reject action with equal prominence to accept. Settings-only paths and visually weaker refusal controls fail this check.',
+        body: 'Validates the first-layer DOM for a reject action with equal prominence to accept. When it fails, the report lists the third-party hosts or cookies that made a banner required. Settings-only paths and visually weaker refusal controls fail this check.',
         refs: 'EDPB Guidelines 03/2022',
         regulator:
           'EDPB Guidelines 03/2022 require a genuine choice. A prominent Accept next to a grey settings link is treated as a dark pattern. Equal-prominence Ablehnen is the German baseline.',
-        cli: 'BANNER_DARK_PATTERN  MEDIUM  -10\nNo equal-prominence Reject / Ablehnen on first layer',
+        cli: 'BANNER_DARK_PATTERN  MEDIUM  -10\nNo equal-prominence Reject / Ablehnen\nwhile hosts: googletagmanager.com',
       },
       {
         index: '04',
         code: 'CI_GATE',
         severity: 'GATE',
         title: 'Local Pipeline Gate & Offline Auditing',
-        body: 'Runs entirely inside your runner or CLI. Zero cloud dependencies. Deterministic exit codes for CI/CD. Network capture, DOM heuristics, and GeoIP stay on the machine that launched the scan.',
+        body: 'Runs entirely inside your runner or CLI. Zero cloud dependencies. Deterministic exit codes for CI/CD. Network capture, DOM heuristics, and GeoIP stay on the machine that launched the scan. Use --format json for machine-readable output.',
         refs: 'CI exit contract, GDPR Art. 32',
         regulator:
           'External scanners do not wait for a SaaS dashboard. They score the site as shipped. A merge that introduces a US font or a pre-consent pixel is visible on the next crawl.',
-        cli: '--ci  exit 1\nstatus NON_COMPLIANT, or any CRITICAL/HIGH finding\nstdout JSON, no outbound telemetry',
+        cli: '--ci  exit 1\nstatus NON_COMPLIANT, or any CRITICAL/HIGH finding\nnpx klaraudit scan URL --format json',
       },
     ],
   },
@@ -169,28 +172,28 @@ const en = {
         severity: 'CRITICAL',
         deduction: '-30 / incident (CRITICAL total capped at -60)',
         criteria:
-          'GTM, Google Analytics, Meta Pixel, DoubleClick, Hotjar, TikTok, Clarity, or non-essential tracking cookies fire during the interaction-free load. A missing first-layer banner while third-party activity is present is also CRITICAL.',
+          'Named vendors (GTM, Google Analytics, Meta Pixel, DoubleClick, Hotjar, TikTok, Clarity) or tracking cookies fire on first paint. Findings include the request URL and a concrete fix. A missing first-layer banner while third-party activity is present is also CRITICAL.',
       },
       {
         category: 'Cross-Border Transfer',
         severity: 'HIGH',
         deduction: '-15 / unique non-EU asset',
         criteria:
-          'Fonts, scripts, or stylesheets resolved outside the EU/EEA via local geoip-lite. Dynamic Google Fonts (fonts.googleapis.com / fonts.gstatic.com) are always flagged. An IP to Google without consent is treated as a Schrems II leak (LG München 3 O 17493/20).',
+          'Requests resolved outside the EU/EEA via local geoip-lite. Distinguishes Google Fonts, third-party hosts, and first-party CDN/hosting edges. Evidence includes IP and country when available.',
       },
       {
         category: 'Banner Dark Patterns',
         severity: 'MEDIUM',
         deduction: '-10 / incident',
         criteria:
-          'A consent UI exists, but Reject / Ablehnen (or equivalent) is missing or weaker than Accept on the first layer. Settings-only or grey-link refusal paths fail EDPB Guidelines 03/2022.',
+          'A consent UI exists, but Reject / Ablehnen (or equivalent) is missing or weaker than Accept on the first layer. The report lists the third-party hosts/cookies that triggered the check.',
       },
       {
         category: 'Mandatory Pages',
         severity: 'LOW',
         deduction: '-5 / missing page',
         criteria:
-          '/impressum or /imprint and /datenschutz or /privacy must return HTTP 200. Common German and EU commercial disclosure requirement.',
+          '/impressum or /imprint and /datenschutz or /privacy must return HTTP 200. Findings include the probed URL and status.',
       },
     ],
     bands: [
@@ -225,6 +228,7 @@ const en = {
     ctaNpm: 'npm package',
     commandsLabel: 'Run locally',
     npxCommand: 'npx klaraudit scan https://example.com',
+    jsonCommand: 'npx klaraudit scan https://example.com --format json',
     footnote:
       'Findings are technical heuristics, not legal advice. For npx, install Chromium once with: npx playwright-core@1.63.0 install chromium — or use the Docker image, which already includes the browser.',
   },
@@ -268,14 +272,14 @@ const de = {
   terminal: {
     eyebrow: 'Beispieltrace',
     title: 'CLI-Ausgabe bei einem durchgefallenen First Paint',
-    body: 'KlarAudit klickt nicht auf Akzeptieren. Es beobachtet den unbelasteten Ladevorgang, löst Remote-IPs mit einer lokalen GeoIP-Datenbank auf und bewertet die Seite. Der Trace entspricht einem repräsentativen NON_COMPLIANT-Lauf.',
+    body: 'KlarAudit klickt nicht auf Akzeptieren. Es beobachtet den unbelasteten Ladevorgang, löst Remote-IPs mit einer lokalen GeoIP-Datenbank auf und bewertet die Seite mit handlungsrelevanten Evidenzen (URL, IP, GeoIP, Fix). Der Trace entspricht einem repräsentativen NON_COMPLIANT-Lauf.',
     windowTitle: 'klaraudit scan https://shop.example.de --ci',
     scanning: 'Scanning https://shop.example.de  timeout=15000ms',
     intercept: 'intercept network (pre-consent, no click)',
     targets: 'targets: cookies, scripts, fonts, banner DOM, /impressum, /datenschutz',
-    gtm: 'FAIL  googletagmanager.com/gtag/js  Tracker vor Einwilligung',
-    fonts: 'FAIL  fonts.googleapis.com  142.250.185.196 (US)  unannotierter Transfer',
-    banner: 'FAIL  Ablehnen auf der ersten Schicht fehlt',
+    gtm: 'FAIL  Google Tag Manager  googletagmanager.com  vor Einwilligung',
+    fonts: 'FAIL  Google Fonts  fonts.googleapis.com  142.250.185.196 · GeoIP US',
+    banner: 'FAIL  Ablehnen fehlt  bei Hosts: googletagmanager.com',
     pages: 'OK    /impressum 200  /datenschutz 200',
     score: 'Score  45 / 100',
     status: 'Status NON_COMPLIANT  (Schwelle < 60)',
@@ -290,21 +294,24 @@ const de = {
       {
         severity: 'CRITICAL',
         category: 'TRACKING_CONSENT',
-        finding: 'GTM vor Einwilligung ausgelöst (googletagmanager.com)',
+        finding:
+          'Google Tag Manager (googletagmanager.com) wurde beim First Paint vor jedem Consent-Klick geladen',
         deduction: '-30',
-        fix: 'GTM/gtag bis zur ausdrücklichen Einwilligung blockieren.',
+        fix: 'GTM erst nach Opt-in laden (Consent Mode / CMP-Gate).',
       },
       {
         severity: 'HIGH',
         category: 'CROSS_BORDER_TRANSFER',
-        finding: 'fonts.googleapis.com auf US-IP 142.250.185.196 aufgelöst',
+        finding:
+          'Google Fonts von fonts.googleapis.com auf IP 142.250.185.196 in US aufgelöst — Besucher-IP vor Einwilligung an Google',
         deduction: '-15',
-        fix: 'Schriften selbst hosten. Google Fonts nicht beim First Paint laden.',
+        fix: 'Schriften selbst hosten oder Google Fonts erst nach Consent laden.',
       },
       {
         severity: 'MEDIUM',
         category: 'BANNER_DARK_PATTERN',
-        finding: 'Kein gleichwertiges Ablehnen auf der ersten Schicht',
+        finding:
+          'Consent-UI gefunden, aber kein gleichwertiges Ablehnen bei aktiver Drittanbieter-Aktivität',
         deduction: '-10',
         fix: 'Ablehnen neben Akzeptieren mit gleichem visuellem Gewicht platzieren.',
       },
@@ -329,40 +336,40 @@ const de = {
         refs: 'TTDSG / TDDDG § 25, DSGVO Art. 6',
         regulator:
           'Abmahn-Crawler protokollieren googletagmanager.com und facebook.net bereits beim First Paint. Die Besucher-IP liegt dann in einem US-Verarbeitungsprotokoll. Speichern oder Auslesen auf dem Endgerät ohne § 25 TDDDG-Grundlage.',
-        cli: 'TRACKING_CONSENT  CRITICAL  -30\nGTM vor Einwilligung ausgelöst (googletagmanager.com)',
+        cli: 'TRACKING_CONSENT  CRITICAL  -30\nGoogle Tag Manager (googletagmanager.com)\nFirst Paint vor Einwilligung\nEvidenz: gtag/js-URL · GeoIP US',
       },
       {
         index: '02',
         code: 'CROSS_BORDER_TRANSFER',
         severity: 'HIGH',
         title: 'Dynamische Drittland-IP-Leaks',
-        body: 'Erkennt US-Asset-Aufrufe wie Google Fonts und ungeprüfte CDN-Sprünge. Remote-IPs werden mit einer Offline-GeoIP-Datenbank klassifiziert. Der Scanner ruft keine Cloud-Lookup-API auf.',
+        body: 'Erkennt Google Fonts, andere Non-EU-Drittanbieter und First-Party-CDN-/Hosting-Edges (z. B. Vercel außerhalb der EU). Remote-IPs werden mit einer Offline-GeoIP-Datenbank klassifiziert. Der Scanner ruft keine Cloud-Lookup-API auf.',
         refs: 'LG München 3 O 17493/20, Schrems II',
         regulator:
           'Das LG München I hat das Laden von Google Fonts von US-Servern ohne Einwilligung als unzulässige IP-Übermittlung bewertet. Schrems II hat Privacy Shield ungültig gemacht. Unannotierte US-Transfers bleiben ein Bußgeldrisiko nach Art. 83 DSGVO.',
-        cli: 'CROSS_BORDER_TRANSFER  HIGH  -15\nfonts.googleapis.com -> 142.250.185.196 (US)\nKeine DPF/SCC-Annotation auf dem Request-Pfad',
+        cli: 'CROSS_BORDER_TRANSFER  HIGH  -15\nGoogle Fonts fonts.googleapis.com\nIP 142.250.185.196 · GeoIP US\nSchriften selbst hosten oder bis Consent verzögern',
       },
       {
         index: '03',
         code: 'BANNER_DARK_PATTERN',
         severity: 'MEDIUM',
         title: 'Einwilligungsschicht und Dark Patterns',
-        body: 'Prüft das First-Layer-DOM auf eine Ablehnen-Aktion mit gleicher Prominenz wie Akzeptieren. Nur-Einstellungen-Wege und visuell schwächere Ablehnkontrollen fallen durch.',
+        body: 'Prüft das First-Layer-DOM auf eine Ablehnen-Aktion mit gleicher Prominenz wie Akzeptieren. Bei Fehlern listet der Report die Drittanbieter-Hosts oder Cookies, die ein Banner erforderlich machen.',
         refs: 'EDSA-Leitlinien 03/2022',
         regulator:
           'Die EDSA-Leitlinien 03/2022 verlangen eine echte Wahl. Ein prominentes Akzeptieren neben einem grauen Einstellungen-Link gilt als Dark Pattern. Gleichwertiges Ablehnen ist der deutsche Maßstab.',
-        cli: 'BANNER_DARK_PATTERN  MEDIUM  -10\nKein gleichwertiges Ablehnen auf der ersten Schicht',
+        cli: 'BANNER_DARK_PATTERN  MEDIUM  -10\nKein gleichwertiges Ablehnen\nbei Hosts: googletagmanager.com',
       },
       {
         index: '04',
         code: 'CI_GATE',
         severity: 'GATE',
         title: 'Lokale Pipeline-Sperre und Offline-Prüfung',
-        body: 'Läuft vollständig in Ihrem Runner oder CLI. Keine Cloud-Abhängigkeiten. Deterministische Exit-Codes für CI/CD. Netzwerkmitschnitt, DOM-Heuristik und GeoIP bleiben auf dem Rechner, der den Scan gestartet hat.',
+        body: 'Läuft vollständig in Ihrem Runner oder CLI. Keine Cloud-Abhängigkeiten. Deterministische Exit-Codes für CI/CD. Netzwerkmitschnitt, DOM-Heuristik und GeoIP bleiben auf dem Rechner, der den Scan gestartet hat. Maschinenlesbar: --format json.',
         refs: 'CI-Exit-Vertrag, DSGVO Art. 32',
         regulator:
           'Externe Scanner warten nicht auf ein SaaS-Dashboard. Sie bewerten die ausgelieferte Seite. Ein Merge, der eine US-Schrift oder ein Pre-Consent-Pixel einführt, ist beim nächsten Crawl sichtbar.',
-        cli: '--ci  exit 1\nStatus NON_COMPLIANT oder jeder CRITICAL/HIGH-Befund\nJSON auf stdout, keine abgehende Telemetrie',
+        cli: '--ci  exit 1\nStatus NON_COMPLIANT oder jeder CRITICAL/HIGH-Befund\nnpx klaraudit scan URL --format json',
       },
     ],
   },
@@ -380,28 +387,28 @@ const de = {
         severity: 'CRITICAL',
         deduction: '-30 / Vorfall (CRITICAL gesamt gedeckelt bei -60)',
         criteria:
-          'GTM, Google Analytics, Meta Pixel, DoubleClick, Hotjar, TikTok, Clarity oder nicht erforderliche Tracking-Cookies feuern während des interaktionsfreien Ladevorgangs. Ein fehlendes First-Layer-Banner bei Drittanbieter-Aktivität ist ebenfalls CRITICAL.',
+          'Benannte Anbieter (GTM, Google Analytics, Meta Pixel, DoubleClick, Hotjar, TikTok, Clarity) oder Tracking-Cookies feuern beim First Paint. Befunde enthalten Request-URL und konkreten Fix. Fehlendes First-Layer-Banner bei Drittanbieter-Aktivität ist ebenfalls CRITICAL.',
       },
       {
         category: 'Drittlandtransfer',
         severity: 'HIGH',
         deduction: '-15 / eindeutiges Nicht-EU-Asset',
         criteria:
-          'Schriften, Skripte oder Stylesheets, die außerhalb der EU/EWR über lokales geoip-lite aufgelöst werden. Dynamische Google Fonts (fonts.googleapis.com / fonts.gstatic.com) werden stets markiert. Eine IP-Übermittlung an Google ohne Einwilligung gilt als Schrems-II-Leck (LG München 3 O 17493/20).',
+          'Requests außerhalb von EU/EWR via lokalem geoip-lite. Unterscheidet Google Fonts, Drittanbieter und First-Party-CDN-/Hosting-Edges. Evidenz enthält IP und Land, sofern verfügbar.',
       },
       {
         category: 'Banner-Dark-Patterns',
         severity: 'MEDIUM',
         deduction: '-10 / Vorfall',
         criteria:
-          'Eine Consent-UI existiert, aber Ablehnen (oder gleichwertig) fehlt oder ist auf der ersten Schicht schwächer als Akzeptieren. Nur-Einstellungen- oder Graulink-Verweigerungswege fallen nach EDSA-Leitlinien 03/2022 durch.',
+          'Consent-UI vorhanden, aber Ablehnen fehlt oder ist schwächer als Akzeptieren auf der ersten Schicht. Der Report listet die auslösenden Drittanbieter-Hosts/Cookies.',
       },
       {
         category: 'Pflichtseiten',
         severity: 'LOW',
         deduction: '-5 / fehlende Seite',
         criteria:
-          '/impressum bzw. /imprint und /datenschutz bzw. /privacy müssen HTTP 200 liefern. Übliche deutsche und europäische Offenlegungspflicht.',
+          '/impressum bzw. /imprint und /datenschutz bzw. /privacy müssen HTTP 200 liefern. Befunde enthalten geprüfte URL und Status.',
       },
     ],
     bands: [
@@ -436,6 +443,7 @@ const de = {
     ctaNpm: 'npm-Paket',
     commandsLabel: 'Lokal ausführen',
     npxCommand: 'npx klaraudit scan https://example.com',
+    jsonCommand: 'npx klaraudit scan https://example.com --format json',
     footnote:
       'Befunde sind technische Heuristiken, keine Rechtsberatung. Für npx einmal Chromium installieren: npx playwright-core@1.63.0 install chromium — oder das Docker-Image nutzen, das den Browser bereits enthält.',
   },
@@ -479,14 +487,14 @@ const es = {
   terminal: {
     eyebrow: 'Traza de ejemplo',
     title: 'Lo que imprime la CLI en un first paint no conforme',
-    body: 'KlarAudit no pulsa Aceptar. Observa la carga en reposo, resuelve las IP remotas con una base GeoIP local y puntúa la página. La traza corresponde a una ejecución NON_COMPLIANT representativa.',
+    body: 'KlarAudit no pulsa Aceptar. Observa la carga en reposo, resuelve las IP remotas con una base GeoIP local y puntúa la página con evidencias accionables (URL, IP, GeoIP, remediación). La traza corresponde a una ejecución NON_COMPLIANT representativa.',
     windowTitle: 'klaraudit scan https://shop.example.de --ci',
     scanning: 'Scanning https://shop.example.de  timeout=15000ms',
     intercept: 'intercept network (pre-consent, no click)',
     targets: 'targets: cookies, scripts, fonts, banner DOM, /impressum, /datenschutz',
-    gtm: 'FAIL  googletagmanager.com/gtag/js  rastreador antes del consentimiento',
-    fonts: 'FAIL  fonts.googleapis.com  142.250.185.196 (US)  transferencia sin anotar',
-    banner: 'FAIL  falta Rechazar / Ablehnen en la primera capa',
+    gtm: 'FAIL  Google Tag Manager  googletagmanager.com  antes del consentimiento',
+    fonts: 'FAIL  Google Fonts  fonts.googleapis.com  142.250.185.196 · GeoIP US',
+    banner: 'FAIL  falta Rechazar / Ablehnen  con hosts: googletagmanager.com',
     pages: 'OK    /impressum 200  /datenschutz 200',
     score: 'Score  45 / 100',
     status: 'Status NON_COMPLIANT  (umbral < 60)',
@@ -501,21 +509,24 @@ const es = {
       {
         severity: 'CRITICAL',
         category: 'TRACKING_CONSENT',
-        finding: 'GTM se disparó antes del consentimiento (googletagmanager.com)',
+        finding:
+          'Google Tag Manager (googletagmanager.com) se cargó en el first paint antes de cualquier clic de consentimiento',
         deduction: '-30',
-        fix: 'Bloquear GTM/gtag hasta un opt-in explícito.',
+        fix: 'Cargar GTM solo tras el opt-in (Consent Mode / puerta CMP).',
       },
       {
         severity: 'HIGH',
         category: 'CROSS_BORDER_TRANSFER',
-        finding: 'fonts.googleapis.com resolvió a la IP estadounidense 142.250.185.196',
+        finding:
+          'Google Fonts desde fonts.googleapis.com resolvió a IP 142.250.185.196 en US — IP del visitante enviada a Google antes del consentimiento',
         deduction: '-15',
-        fix: 'Alojar las fuentes en origen. No cargar Google Fonts en el first paint.',
+        fix: 'Autoalojar fuentes o cargar Google Fonts solo tras el consentimiento.',
       },
       {
         severity: 'MEDIUM',
         category: 'BANNER_DARK_PATTERN',
-        finding: 'No hay Rechazar / Ablehnen de igual prominencia en la primera capa',
+        finding:
+          'Hay UI de consentimiento, pero falta Rechazar / Ablehnen con igual prominencia mientras hay hosts de terceros',
         deduction: '-10',
         fix: 'Colocar Ablehnen junto a Aceptar con el mismo peso visual.',
       },
@@ -540,40 +551,40 @@ const es = {
         refs: 'TTDSG / TDDDG § 25, RGPD art. 6',
         regulator:
           'Los rastreadores de requerimientos registran googletagmanager.com y facebook.net en el first paint. La IP del visitante ya está en un registro de un encargado estadounidense. El almacenamiento o acceso en el equipo terminal carece de base en el § 25 TDDDG.',
-        cli: 'TRACKING_CONSENT  CRITICAL  -30\nGTM se disparó antes del consentimiento (googletagmanager.com)',
+        cli: 'TRACKING_CONSENT  CRITICAL  -30\nGoogle Tag Manager (googletagmanager.com)\ncargado en first paint antes del consentimiento\nevidencia: URL gtag/js · GeoIP US',
       },
       {
         index: '02',
         code: 'CROSS_BORDER_TRANSFER',
         severity: 'HIGH',
         title: 'Fugas dinámicas de IP transfronterizas',
-        body: 'Detecta llamadas a activos estadounidenses como Google Fonts y saltos CDN no verificados. Las IP remotas se clasifican con una base GeoIP sin conexión. El escáner no llama a ninguna API de lookup en la nube.',
+        body: 'Detecta Google Fonts, otros hosts de terceros fuera de la UE y edges CDN/hosting de primera parte (por ejemplo un edge de Vercel fuera de la UE). Las IP remotas se clasifican con una base GeoIP local. El escáner no llama a una API de lookup en la nube.',
         refs: 'LG München 3 O 17493/20, Schrems II',
         regulator:
           'El LG München I consideró que cargar Google Fonts desde servidores estadounidenses sin consentimiento transmite ilícitamente la IP del visitante. Schrems II invalidó el Privacy Shield. Las transferencias a EE. UU. sin anotar siguen siendo un riesgo de multa del art. 83 RGPD.',
-        cli: 'CROSS_BORDER_TRANSFER  HIGH  -15\nfonts.googleapis.com -> 142.250.185.196 (US)\nSin anotación DPF/SCC en la ruta de la petición',
+        cli: 'CROSS_BORDER_TRANSFER  HIGH  -15\nGoogle Fonts fonts.googleapis.com\nIP 142.250.185.196 · GeoIP US\nAutoalojar fuentes o retrasar hasta el consentimiento',
       },
       {
         index: '03',
         code: 'BANNER_DARK_PATTERN',
         severity: 'MEDIUM',
         title: 'Capa de consentimiento y patrones oscuros',
-        body: 'Valida el DOM de la primera capa en busca de una acción de rechazo con la misma prominencia que aceptar. Los caminos solo de ajustes y los controles de rechazo más débiles fallan esta comprobación.',
+        body: 'Valida el DOM de la primera capa en busca de una acción de rechazo con la misma prominencia que aceptar. Si falla, el informe lista los hosts o cookies de terceros que hicieron necesario el banner.',
         refs: 'Directrices del CEPD 03/2022',
         regulator:
           'Las Directrices del CEPD 03/2022 exigen una elección real. Un Aceptar destacado junto a un enlace gris de ajustes se trata como patrón oscuro. Un Ablehnen de igual prominencia es la referencia alemana.',
-        cli: 'BANNER_DARK_PATTERN  MEDIUM  -10\nNo hay Rechazar / Ablehnen de igual prominencia en la primera capa',
+        cli: 'BANNER_DARK_PATTERN  MEDIUM  -10\nFalta Rechazar / Ablehnen con igual prominencia\nmientras hosts: googletagmanager.com',
       },
       {
         index: '04',
         code: 'CI_GATE',
         severity: 'GATE',
         title: 'Puerta de pipeline local y auditoría sin conexión',
-        body: 'Se ejecuta por completo en tu runner o CLI. Cero dependencias en la nube. Códigos de salida deterministas para CI/CD. La captura de red, las heurísticas DOM y GeoIP permanecen en la máquina que lanzó el escaneo.',
+        body: 'Se ejecuta por completo en tu runner o CLI. Cero dependencias en la nube. Códigos de salida deterministas para CI/CD. La captura de red, las heurísticas DOM y GeoIP permanecen en la máquina que lanzó el escaneo. Use --format json para salida legible por máquina.',
         refs: 'Contrato de salida CI, RGPD art. 32',
         regulator:
           'Los escáneres externos no esperan a un panel SaaS. Puntúan el sitio tal como se entrega. Un merge que introduce una fuente estadounidense o un píxel pre-consentimiento es visible en el siguiente rastreo.',
-        cli: '--ci  exit 1\nestado NON_COMPLIANT, o cualquier hallazgo CRITICAL/HIGH\nJSON en stdout, sin telemetría saliente',
+        cli: '--ci  exit 1\nestado NON_COMPLIANT, o cualquier hallazgo CRITICAL/HIGH\nnpx klaraudit scan URL --format json',
       },
     ],
   },
@@ -591,28 +602,28 @@ const es = {
         severity: 'CRITICAL',
         deduction: '-30 / incidente (CRITICAL total limitado a -60)',
         criteria:
-          'GTM, Google Analytics, Meta Pixel, DoubleClick, Hotjar, TikTok, Clarity o cookies de rastreo no esenciales se disparan durante la carga sin interacción. Un banner de primera capa ausente con actividad de terceros también es CRITICAL.',
+          'Proveedores concretos (GTM, Google Analytics, Meta Pixel, DoubleClick, Hotjar, TikTok, Clarity) o cookies de rastreo se disparan en el first paint. Los hallazgos incluyen la URL de la petición y una remediación concreta. Un banner de primera capa ausente con actividad de terceros también es CRITICAL.',
       },
       {
         category: 'Transferencia transfronteriza',
         severity: 'HIGH',
         deduction: '-15 / activo no UE único',
         criteria:
-          'Fuentes, scripts u hojas de estilo resueltos fuera de la UE/EEE mediante geoip-lite local. Google Fonts dinámicas (fonts.googleapis.com / fonts.gstatic.com) se marcan siempre. Una IP hacia Google sin consentimiento se trata como fuga Schrems II (LG München 3 O 17493/20).',
+          'Peticiones resueltas fuera del EEE mediante geoip-lite local. Distingue Google Fonts, hosts de terceros y edges CDN/hosting de primera parte. La evidencia incluye IP y país cuando está disponible.',
       },
       {
         category: 'Patrones oscuros del banner',
         severity: 'MEDIUM',
         deduction: '-10 / incidente',
         criteria:
-          'Existe una IU de consentimiento, pero Rechazar / Ablehnen (o equivalente) falta o es más débil que Aceptar en la primera capa. Los caminos solo de ajustes o enlaces grises fallan las Directrices del CEPD 03/2022.',
+          'Existe una IU de consentimiento, pero Rechazar / Ablehnen (o equivalente) falta o es más débil que Aceptar en la primera capa. El informe lista los hosts/cookies de terceros que activaron la comprobación.',
       },
       {
         category: 'Páginas obligatorias',
         severity: 'LOW',
         deduction: '-5 / página ausente',
         criteria:
-          '/impressum o /imprint y /datenschutz o /privacy deben devolver HTTP 200. Requisito habitual de revelación comercial en Alemania y la UE.',
+          '/impressum o /imprint y /datenschutz o /privacy deben devolver HTTP 200. Los hallazgos incluyen la URL sondeada y el estado.',
       },
     ],
     bands: [
@@ -647,6 +658,7 @@ const es = {
     ctaNpm: 'Paquete npm',
     commandsLabel: 'Ejecutar en local',
     npxCommand: 'npx klaraudit scan https://example.com',
+    jsonCommand: 'npx klaraudit scan https://example.com --format json',
     footnote:
       'Los hallazgos son heurísticas técnicas, no asesoramiento jurídico. Con npx, instala Chromium una vez: npx playwright-core@1.63.0 install chromium — o usa la imagen Docker, que ya incluye el navegador.',
   },

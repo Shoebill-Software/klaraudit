@@ -45,7 +45,46 @@ npx playwright-core@1.63.0 install chromium
 npx klaraudit scan https://your-site.com
 ```
 
+Machine-readable JSON (CI, scripts, or piping into other tools):
+
+```bash
+npx klaraudit scan https://your-site.com --format json
+```
+
 If Google Chrome is already installed, KlarAudit will try the system Chrome channel automatically.
+
+### Sample findings
+
+Findings name the vendor or hosting edge, include evidence (URL, IP, GeoIP), and give a concrete fix. Example excerpts:
+
+| Severity | Category | Finding |
+|----------|----------|---------|
+| CRITICAL | TRACKING_CONSENT | Google Tag Manager (`googletagmanager.com`) loaded on first paint before any consent click |
+| HIGH | CROSS_BORDER_TRANSFER | Google Fonts from `fonts.googleapis.com` resolved to a US IP — or your own origin resolved to a non-EU CDN edge (e.g. Vercel) |
+| MEDIUM | BANNER_DARK_PATTERN | Consent UI found, but no equal-prominence Reject / Ablehnen while third-party hosts are active |
+| LOW | MANDATORY_PAGES | `/impressum` missing or not HTTP 200 (status included in evidence) |
+
+JSON shape (abridged):
+
+```json
+{
+  "score": 45,
+  "status": "NON_COMPLIANT",
+  "violations": [
+    {
+      "severity": "CRITICAL",
+      "message": "Google Tag Manager (www.googletagmanager.com) loaded on first paint before any consent click.",
+      "evidence": {
+        "url": "https://www.googletagmanager.com/gtag/js?id=G-XXXX",
+        "domain": "www.googletagmanager.com",
+        "detail": "Google Tag Manager request observed before consent",
+        "ipCountry": "US"
+      },
+      "recommendation": "Load GTM only after opt-in (Consent Mode / CMP gate), or remove it from the first paint."
+    }
+  ]
+}
+```
 
 ---
 
@@ -65,6 +104,7 @@ klaraudit scan <url> [options]
 Examples:
 
 ```bash
+npx klaraudit scan https://your-site.com --format json
 npx klaraudit scan https://staging.example.com --ci --format json
 npx klaraudit scan https://example.com --format pdf --output ./klaraudit-report.pdf
 npx klaraudit scan https://example.com --timeout 30000
@@ -81,7 +121,7 @@ Base score is **100**. Deductions apply per incident, then the result is floored
 | Category | Typical severity | Deduction | Criteria |
 |----------|------------------|-----------|----------|
 | **Tracking Consent** | `CRITICAL` | **−30** per incident (capped at **−60** total for all `CRITICAL`) | Known trackers (GTM / `googletagmanager.com`, Google Analytics, Meta/`facebook.net`, DoubleClick, Hotjar, TikTok, Clarity, …) or non-essential tracking cookies fire during the interaction-free load, before any consent click. Missing first-layer banner while third-party activity is present is also `CRITICAL`. |
-| **Cross-Border Transfer** | `HIGH` | **−15** per unique non-EU asset | Outbound font/script/stylesheet requests resolved **outside the EU/EEA** via local `geoip-lite` (no external GeoIP API). Dynamic Google Fonts (`fonts.googleapis.com` / `fonts.gstatic.com`) are always flagged: German courts have treated IP transfer to Google without consent as a GDPR violation. |
+| **Cross-Border Transfer** | `HIGH` | **−15** per unique non-EU asset | Outbound requests resolved **outside the EU/EEA** via local `geoip-lite`. Distinguishes **Google Fonts**, **third-party hosts**, and **first-party CDN/hosting edges** (e.g. Vercel edge in CA/US). Evidence includes IP + country when available. |
 | **Banner Dark Patterns** | `MEDIUM` | **−10** per incident | Consent UI detected, but no equal-prominence **Reject / Ablehnen** (or equivalent) control on the **first layer**. Accept-only, settings-only, or visually buried refusal paths fail this check. |
 | **Mandatory Pages** | `LOW` | **−5** per missing page | `/impressum` or `/imprint`, and `/datenschutz` or `/privacy`, must return HTTP **200**. |
 

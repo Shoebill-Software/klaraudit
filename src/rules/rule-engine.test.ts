@@ -108,8 +108,11 @@ describe('trackerLeakRule', () => {
     const violations = await trackerLeakRule.evaluate(context);
     expect(violations).toHaveLength(1);
     expect(violations[0]?.severity).toBe('CRITICAL');
+    expect(violations[0]?.message).toMatch(/Google Analytics/i);
     expect(violations[0]?.evidence.url).toContain('google-analytics.com');
     expect(violations[0]?.evidence.ipCountry).toBe('US');
+    expect(violations[0]?.evidence.detail).toMatch(/before consent/i);
+    expect(violations[0]?.recommendation).toMatch(/analytics cookies|consent/i);
   });
 
   it('flags known tracking cookies set before consent', async () => {
@@ -143,6 +146,8 @@ describe('trackerLeakRule', () => {
       '_ga',
       '_hjSessionUser_1',
     ]);
+    expect(violations[0]?.message).toMatch(/Google Analytics/i);
+    expect(violations[1]?.message).toMatch(/Hotjar/i);
   });
 });
 
@@ -171,6 +176,7 @@ describe('googleFontsRule', () => {
         capturedRequest({
           url: 'https://cdn.us-vendor.test/a.js',
           domain: 'cdn.us-vendor.test',
+          ip: '1.2.3.4',
           country: 'US',
           isNonEU: true,
         }),
@@ -186,7 +192,34 @@ describe('googleFontsRule', () => {
     const violations = await googleFontsRule.evaluate(context);
     expect(violations).toHaveLength(1);
     expect(violations[0]?.severity).toBe('HIGH');
-    expect(violations[0]?.message).toMatch(/Data Privacy Framework|SCC/i);
+    expect(violations[0]?.message).toMatch(/Third-party host|1\.2\.3\.4|United States/i);
+    expect(violations[0]?.evidence.ip).toBe('1.2.3.4');
+    expect(violations[0]?.recommendation).toMatch(/first paint|transfer mechanism/i);
+  });
+
+  it('explains first-party non-EU hosting edges with actionable remediation', async () => {
+    const context = emptyContext({
+      targetUrl: 'https://dillo-backup.com/',
+      requests: [
+        capturedRequest({
+          url: 'https://dillo-backup.com/',
+          domain: 'dillo-backup.com',
+          ip: '76.76.21.21',
+          country: 'CA',
+          isNonEU: true,
+        }),
+      ],
+    });
+
+    const violations = await googleFontsRule.evaluate(context);
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.message).toMatch(/own origin|CDN edge|Canada/i);
+    expect(violations[0]?.evidence).toMatchObject({
+      domain: 'dillo-backup.com',
+      ip: '76.76.21.21',
+      ipCountry: 'CA',
+    });
+    expect(violations[0]?.recommendation).toMatch(/EU region|privacy notice/i);
   });
 });
 
@@ -201,6 +234,9 @@ describe('bannerCheckRule', () => {
     const violations = await bannerCheckRule.evaluate(context);
     expect(violations).toHaveLength(1);
     expect(violations[0]?.severity).toBe('CRITICAL');
+    expect(violations[0]?.message).toMatch(/cdn\.thirdparty\.test/i);
+    expect(violations[0]?.evidence.detail).toMatch(/Third-party hosts/i);
+    expect(violations[0]?.evidence.domain).toBe('cdn.thirdparty.test');
   });
 
   it('flags consent banners without a first-layer Reject control', async () => {
@@ -213,6 +249,7 @@ describe('bannerCheckRule', () => {
     const violations = await bannerCheckRule.evaluate(context);
     expect(violations).toHaveLength(1);
     expect(violations[0]?.severity).toBe('MEDIUM');
+    expect(violations[0]?.evidence.detail).toMatch(/Third-party hosts/i);
   });
 
   it('passes when Ablehnen is present on the first layer', async () => {

@@ -5,6 +5,7 @@ export {
   failsCiGate,
   hasCiBlockingViolations,
 } from './ci.js';
+export { formatEvidenceSummary } from './evidence.js';
 export {
   defaultPdfOutputPath,
   generatePdfReport,

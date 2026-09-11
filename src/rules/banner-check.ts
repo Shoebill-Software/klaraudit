@@ -15,36 +15,59 @@ export const bannerCheckRule: ComplianceRule = {
   description:
     'Requires a consent banner with an explicit Reject/Ablehnen control when third-party activity is observed.',
   async evaluate(context: ScanContext): Promise<Violation[]> {
-    if (!hasThirdPartyActivity(context)) {
+    const activity = describeThirdPartyActivity(context);
+    if (!activity) {
       return [];
     }
 
     if (!context.bannerFound) {
+      const evidence: Violation['evidence'] = {
+        detail: activity.detail,
+      };
+      if (activity.sampleDomain) {
+        evidence.domain = activity.sampleDomain;
+      }
+      if (activity.sampleUrl) {
+        evidence.url = activity.sampleUrl;
+      }
+      if (activity.sampleCookie) {
+        evidence.cookieName = activity.sampleCookie;
+      }
       return [
         {
           id: `${bannerCheckRule.id}-missing-banner`,
           ruleName: bannerCheckRule.name,
           severity: 'CRITICAL',
-          message:
-            'Third-party requests or cookies were observed, but no consent banner was detected on the first layer.',
-          evidence: {},
+          message: `Third-party activity ran on first paint (${activity.summary}), but no consent banner was detected.`,
+          evidence,
           recommendation:
-            'Present a clear first-layer consent banner before firing non-essential third-party scripts or setting tracking cookies.',
+            'Show a CMP/banner on first paint and block non-essential third-party scripts/cookies until the visitor opts in. Confirm the banner markup is in the initial HTML (not only after a late JS inject that KlarAudit may miss).',
         },
       ];
     }
 
     if (!context.hasRejectButton) {
+      const evidence: Violation['evidence'] = {
+        detail: activity.detail,
+      };
+      if (activity.sampleDomain) {
+        evidence.domain = activity.sampleDomain;
+      }
+      if (activity.sampleUrl) {
+        evidence.url = activity.sampleUrl;
+      }
+      if (activity.sampleCookie) {
+        evidence.cookieName = activity.sampleCookie;
+      }
       return [
         {
           id: `${bannerCheckRule.id}-missing-reject`,
           ruleName: bannerCheckRule.name,
           severity: 'MEDIUM',
-          message:
-            'Consent banner detected, but no equal-prominence "Reject" / "Ablehnen" option is available on the first layer.',
-          evidence: {},
+          message: `Consent UI found, but no equal-prominence Reject / Ablehnen control on the first layer while third-party activity is present (${activity.summary}).`,
+          evidence,
           recommendation:
-            'Provide an equally prominent first-layer Reject/Ablehnen (or equivalent) control next to Accept. Do not bury refusal behind secondary settings-only flows.',
+            'Put Reject / Ablehnen (or “Necessary only”) on the first layer beside Accept at the same visual weight. Do not hide refusal behind a settings-only path.',
         },
       ];
     }
@@ -52,6 +75,71 @@ export const bannerCheckRule: ComplianceRule = {
     return [];
   },
 };
+
+interface ThirdPartyActivity {
+  summary: string;
+  detail: string;
+  sampleDomain?: string;
+  sampleUrl?: string;
+  sampleCookie?: string;
+}
+
+function describeThirdPartyActivity(context: ScanContext): ThirdPartyActivity | undefined {
+  const targetHost = safeHostname(context.targetUrl);
+  const thirdPartyHosts = unique(
+    context.requests
+      .filter((request) => isThirdPartyDomain(request.domain, targetHost))
+      .map((request) => request.domain.toLowerCase()),
+  );
+  const cookieNames = unique(context.cookies.map((cookie) => cookie.name));
+
+  if (thirdPartyHosts.length === 0 && cookieNames.length === 0) {
+    return undefined;
+  }
+
+  const hostPreview = thirdPartyHosts.slice(0, 3).join(', ');
+  const cookiePreview = cookieNames.slice(0, 3).join(', ');
+  const summaryParts: string[] = [];
+  if (hostPreview) {
+    summaryParts.push(
+      thirdPartyHosts.length > 3
+        ? `hosts ${hostPreview}, +${thirdPartyHosts.length - 3} more`
+        : `hosts ${hostPreview}`,
+    );
+  }
+  if (cookiePreview) {
+    summaryParts.push(
+      cookieNames.length > 3
+        ? `cookies ${cookiePreview}, +${cookieNames.length - 3} more`
+        : `cookies ${cookiePreview}`,
+    );
+  }
+
+  const detailParts: string[] = [];
+  if (thirdPartyHosts.length > 0) {
+    detailParts.push(`Third-party hosts: ${thirdPartyHosts.join(', ')}`);
+  }
+  if (cookieNames.length > 0) {
+    detailParts.push(`Cookies on load: ${cookieNames.join(', ')}`);
+  }
+
+  const sampleRequest = context.requests.find((request) =>
+    isThirdPartyDomain(request.domain, targetHost),
+  );
+
+  const activity: ThirdPartyActivity = {
+    summary: summaryParts.join('; '),
+    detail: detailParts.join('. '),
+  };
+  if (sampleRequest) {
+    activity.sampleDomain = sampleRequest.domain;
+    activity.sampleUrl = sampleRequest.url;
+  }
+  if (cookieNames[0]) {
+    activity.sampleCookie = cookieNames[0];
+  }
+  return activity;
+}
 
 /** Labels commonly used for an equal-prominence reject / decline control. */
 const REJECT_LABEL_PATTERN =
@@ -103,15 +191,6 @@ export function hasFirstLayerReject(domSnapshot: string): boolean {
   return REJECT_LABEL_PATTERN.test(domSnapshot);
 }
 
-function hasThirdPartyActivity(context: ScanContext): boolean {
-  if (context.cookies.length > 0) {
-    return true;
-  }
-
-  const targetHost = safeHostname(context.targetUrl);
-  return context.requests.some((request) => isThirdPartyDomain(request.domain, targetHost));
-}
-
 function safeHostname(targetUrl: string): string {
   try {
     return new URL(targetUrl).hostname.toLowerCase();
@@ -126,6 +205,10 @@ function isThirdPartyDomain(requestDomain: string, targetHost: string): boolean 
   }
   const domain = requestDomain.toLowerCase();
   return domain !== targetHost && !domain.endsWith(`.${targetHost}`);
+}
+
+function unique(values: readonly string[]): string[] {
+  return [...new Set(values.filter((value) => value.length > 0))];
 }
 
 function domContainsSelector(domSnapshot: string, selector: string): boolean {

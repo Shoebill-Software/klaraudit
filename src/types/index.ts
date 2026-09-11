@@ -28,7 +28,12 @@ export interface Violation {
     domain?: string;
     cookieName?: string;
     elementSelector?: string;
+    /** Resolved server IP for the request, when available. */
+    ip?: string;
+    /** ISO country code from local GeoIP for that IP. */
     ipCountry?: string;
+    /** Short human-readable clue (what fired, HTTP status, vendor, …). */
+    detail?: string;
   };
   recommendation: string;
 }

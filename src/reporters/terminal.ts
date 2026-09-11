@@ -9,6 +9,7 @@ import type {
   Violation,
 } from '../types/index.js';
 import { ciGateReasons, failsCiGate } from './ci.js';
+import { formatEvidenceSummary } from './evidence.js';
 
 const HEADER_WIDTH = 72;
 
@@ -111,10 +112,14 @@ function renderViolations(violations: readonly Violation[]): string {
 
   for (const violation of violations) {
     const penalty = SEVERITY_PENALTIES[violation.severity] ?? 0;
+    const evidence = formatEvidenceSummary(violation.evidence);
+    const title = evidence
+      ? `${violation.message}\n${chalk.dim(evidence)}`
+      : violation.message;
     table.push([
       colorizeSeverity(violation.severity),
       categoryForViolation(violation),
-      violation.message,
+      title,
       penalty === 0 ? chalk.gray('0') : chalk.red.bold(`-${penalty}`),
       violation.recommendation,
     ]);

@@ -78,6 +78,7 @@ describe('formatTerminalReport', () => {
     expect(report).toContain('TRACKING_CONSENT');
     expect(report).toContain('Google Analytics fired');
     expect(report).toContain('before consent.');
+    expect(report).toContain('https://www.google-analytic');
     expect(report).toContain('-30');
     expect(report).toContain('Block analytics until the user');
     expect(report).toContain('opts in.');

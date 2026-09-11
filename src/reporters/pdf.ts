@@ -6,6 +6,7 @@ import type { Browser } from 'playwright-core';
 import { launchChromium } from '../engine/chromium.js';
 import { DEFAULT_RULES, SEVERITY_PENALTIES } from '../rules/rule-engine.js';
 import type { AuditResult, ComplianceStatus, Severity, Violation } from '../types/index.js';
+import { formatEvidenceSummary } from './evidence.js';
 const SCORE_RING_RADIUS = 52;
 const SCORE_RING_CIRCUMFERENCE = 2 * Math.PI * SCORE_RING_RADIUS;
 
@@ -180,8 +181,8 @@ function categoryForViolation(violation: Violation): string {
 }
 
 function offendingResource(violation: Violation): string {
-  const { url, domain, cookieName, elementSelector } = violation.evidence;
-  return url ?? domain ?? cookieName ?? elementSelector ?? '—';
+  const summary = formatEvidenceSummary(violation.evidence);
+  return summary.length > 0 ? summary : '—';
 }
 
 function countSeverities(violations: readonly Violation[]): PdfSeverityCounts {

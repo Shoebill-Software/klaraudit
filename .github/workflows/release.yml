@@ -61,10 +61,14 @@ jobs:
           echo "image=ghcr.io/shoebill-software/klaraudit" >> "$GITHUB_OUTPUT"
 
       - name: Publish to npm
-        if: ${{ github.event_name == 'push' || inputs.publish_npm }}
+        if: ${{ (github.event_name == 'push' || inputs.publish_npm) && secrets.NPM_TOKEN != '' }}
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Skip npm publish
+        if: ${{ (github.event_name == 'push' || inputs.publish_npm) && secrets.NPM_TOKEN == '' }}
+        run: echo "NPM_TOKEN secret is not set; skipping npm publish."
 
       - name: Set up Docker Buildx
         if: ${{ github.event_name == 'push' || inputs.publish_ghcr }}

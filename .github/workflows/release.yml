@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       publish_npm:
-        description: Publish to npm
+        description: Publish to npm (requires NPM_TOKEN secret)
         type: boolean
         default: true
       publish_ghcr:
@@ -18,7 +18,6 @@ on:
 permissions:
   contents: read
   packages: write
-  id-token: write
 
 jobs:
   release:
@@ -61,14 +60,16 @@ jobs:
           echo "image=ghcr.io/shoebill-software/klaraudit" >> "$GITHUB_OUTPUT"
 
       - name: Publish to npm
-        if: ${{ (github.event_name == 'push' || inputs.publish_npm) && secrets.NPM_TOKEN != '' }}
-        run: npm publish --access public
+        if: ${{ github.event_name == 'push' || inputs.publish_npm }}
+        shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Skip npm publish
-        if: ${{ (github.event_name == 'push' || inputs.publish_npm) && secrets.NPM_TOKEN == '' }}
-        run: echo "NPM_TOKEN secret is not set; skipping npm publish."
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "NPM_TOKEN secret is not set; skipping npm publish."
+            exit 0
+          fi
+          npm publish --access public
 
       - name: Set up Docker Buildx
         if: ${{ github.event_name == 'push' || inputs.publish_ghcr }}

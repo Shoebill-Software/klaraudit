@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { writeFile } from 'node:fs/promises';
 import chalk from 'chalk';
 import ora from 'ora';
@@ -29,6 +32,24 @@ export interface ScanOptions {
   timeout: string;
 }
 
+function readPackageVersion(): string {
+  try {
+    const pkgPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json');
+    const parsed: unknown = JSON.parse(readFileSync(pkgPath, 'utf8'));
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      'version' in parsed &&
+      typeof parsed.version === 'string'
+    ) {
+      return parsed.version;
+    }
+  } catch {
+    // Fall back when package.json is unavailable.
+  }
+  return '0.1.0';
+}
+
 const program = new Command();
 
 program
@@ -36,7 +57,7 @@ program
   .description(
     'Zero-cloud headless CLI scanner for EU GDPR, e-Privacy, and Schrems II compliance',
   )
-  .version('0.1.0');
+  .version(readPackageVersion());
 
 program
   .command('scan')

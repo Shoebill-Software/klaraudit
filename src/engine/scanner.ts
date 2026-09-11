@@ -1,22 +1,15 @@
 import geoipLite from 'geoip-lite';
 import {
-  chromium,
   type Browser,
   type Cookie,
   type Page,
   type Response as PlaywrightResponse,
 } from 'playwright-core';
+import { launchChromium } from './chromium.js';
 import type { CapturedCookie, CapturedRequest, ScanContext } from '../types/index.js';
 
 export type { CapturedCookie, CapturedRequest, ScanContext } from '../types/index.js';
-
-/** Chromium flags for Docker / unprivileged containers. */
-export const CHROMIUM_LAUNCH_ARGS = [
-  '--no-sandbox',
-  '--disable-setuid-sandbox',
-  '--disable-dev-shm-usage',
-  '--disable-gpu',
-] as const;
+export { CHROMIUM_LAUNCH_ARGS, launchChromium } from './chromium.js';
 
 /** EU member states + EEA (IS, LI, NO). Anything else is treated as non-EU for Schrems heuristics. */
 const EU_EEA_COUNTRY_CODES = new Set<string>([
@@ -132,26 +125,6 @@ export async function scanPage(
   } finally {
     if (browser) {
       await browser.close();
-    }
-  }
-}
-
-async function launchChromium(): Promise<Browser> {
-  const launchOptions = {
-    headless: true,
-    args: [...CHROMIUM_LAUNCH_ARGS],
-  };
-
-  try {
-    return await chromium.launch(launchOptions);
-  } catch (localError: unknown) {
-    // playwright-core does not bundle a browser; fall back to system Chrome.
-    try {
-      return await chromium.launch({ ...launchOptions, channel: 'chrome' });
-    } catch {
-      throw localError instanceof Error
-        ? localError
-        : new Error(String(localError));
     }
   }
 }

@@ -226,6 +226,14 @@ describe('scanPage', () => {
     expect(browser.close).toHaveBeenCalledOnce();
   });
 
+  it('explains how to install Chromium when no browser is available', async () => {
+    vi.mocked(chromium.launch).mockRejectedValue(new Error('Executable does not exist'));
+
+    await expect(scanPage(targetUrl, 5_000)).rejects.toThrow(
+      /npx playwright-core@1\.63\.0 install chromium/,
+    );
+  });
+
   it('still closes the browser and returns a ScanContext when navigation times out', async () => {
     const { page } = createMockPage([]);
     vi.mocked(page.goto).mockRejectedValue(new Error('Timeout 5000ms exceeded'));

@@ -2,13 +2,13 @@
 
 # KlarAudit 🛡️
 
-[![CI Status](https://github.com/fenneq-software/klaraudit/actions/workflows/ci.yml/badge.svg)](https://github.com/fenneq-software/klaraudit/actions)
+[![CI Status](https://github.com/Shoebill-Software/klaraudit/actions/workflows/ci.yml/badge.svg)](https://github.com/Shoebill-Software/klaraudit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![npm version](https://img.shields.io/npm/v/klaraudit.svg)](https://www.npmjs.com/package/klaraudit)
-[![Docker](https://img.shields.io/badge/docker-ghcr.io-2496ED?logo=docker&logoColor=white)](https://github.com/fenneq-software/klaraudit/pkgs/container/klaraudit)
+[![Docker](https://img.shields.io/badge/docker-ghcr.io-2496ED?logo=docker&logoColor=white)](https://github.com/Shoebill-Software/klaraudit/pkgs/container/klaraudit)
 
 **Zero-cloud, headless GDPR, e-Privacy, and Schrems II compliance scanner.**  
-Audit a live page the way an automated EU regulator scan would: locally, with no install and no telemetry.
+Audit a live page the way an automated EU regulator scan would: locally, with no cloud account and no telemetry.
 
 [Quick Start](#-quick-start) · [CLI Usage](#-cli-usage--options) · [Heuristics](#-compliance-heuristics) · [CI/CD](#-cicd-integration)
 
@@ -22,7 +22,7 @@ European warning letters and fines are increasingly triggered by **external auto
 
 Most “compliance” products ask you to drop another tracker, open a cloud account, or pay a monthly seat. **KlarAudit does none of that.**
 
-It boots local headless Chromium, intercepts the first-paint network, cookies, and consent UI **before any click**, resolves remote IPs with an **offline GeoIP database**, and prints a scored report (terminal, JSON, or agency A4 PDF). Execution is zero-cloud and zero-install: `npx` or Docker on your machine or in CI.
+It boots local headless Chromium, intercepts the first-paint network, cookies, and consent UI **before any click**, resolves remote IPs with an **offline GeoIP database**, and prints a scored report (terminal, JSON, or A4 PDF). Free and open source under MIT.
 
 KlarAudit is a **technical audit tool**. It does not constitute legal advice.
 
@@ -30,19 +30,22 @@ KlarAudit is a **technical audit tool**. It does not constitute legal advice.
 
 ## 🚀 Quick start
 
-Instant scan, no global install:
+### Docker (recommended — Chromium included)
 
 ```bash
+docker run --rm --init --ipc=host ghcr.io/shoebill-software/klaraudit scan https://your-site.com
+```
+
+### npx (Node.js 20+)
+
+`playwright-core` does not download a browser by itself. Install Chromium once, then scan:
+
+```bash
+npx playwright-core@1.63.0 install chromium
 npx klaraudit scan https://your-site.com
 ```
 
-Same scan in an ephemeral container:
-
-```bash
-docker run --rm ghcr.io/fenneq-software/klaraudit scan https://your-site.com
-```
-
-Requires Node.js 20+ for `npx`. The Docker image bundles Chromium.
+If Google Chrome is already installed, KlarAudit will try the system Chrome channel automatically.
 
 ---
 
@@ -63,7 +66,7 @@ Examples:
 
 ```bash
 npx klaraudit scan https://staging.example.com --ci --format json
-npx klaraudit scan https://client.example.com --format pdf --output ./handover/klaraudit-report.pdf
+npx klaraudit scan https://example.com --format pdf --output ./klaraudit-report.pdf
 npx klaraudit scan https://example.com --timeout 30000
 ```
 
@@ -89,7 +92,7 @@ Severity order: `CRITICAL` > `HIGH` > `MEDIUM` > `LOW` (`INFO` is recorded with 
 | Status | Score | Meaning |
 |--------|-------|---------|
 | **COMPLIANT** | **≥ 85** | No blocking first-paint leaks at the heuristic bar; still review residual `LOW`/`MEDIUM` findings. |
-| **WARNING** | **60–84** | Issues present; not a clean handover. Fix before treating the page as regulator-safe. |
+| **WARNING** | **60–84** | Issues present; not a clean pass. Fix before treating the page as regulator-safe. |
 | **NON_COMPLIANT** | **< 60** | Likely to fail an automated external scan. `--ci` exits `1`. |
 
 `--ci` also exits `1` on any `CRITICAL` or `HIGH` finding, even if the numeric score is still in `WARNING`.
@@ -98,7 +101,7 @@ Severity order: `CRITICAL` > `HIGH` > `MEDIUM` > `LOW` (`INFO` is recorded with 
 
 ## 🔁 CI/CD integration
 
-Drop this workflow in `.github/workflows/compliance.yml` and set repository variable `KLARAUDIT_STAGING_URL` (for example `https://staging.example.com`).
+Use the published image and set repository variable `KLARAUDIT_STAGING_URL` (for example `https://staging.example.com`):
 
 ```yaml
 name: KlarAudit Compliance
@@ -129,17 +132,27 @@ jobs:
       - name: Run KlarAudit (CI gate)
         run: >
           docker run --rm --init --ipc=host
-          ghcr.io/fenneq-software/klaraudit
+          ghcr.io/shoebill-software/klaraudit
           scan "$TARGET_URL"
           --ci
           --format json
 ```
 
-`npx` equivalent (requires Chromium available to Playwright):
+`npx` equivalent (after `npx playwright-core@1.63.0 install chromium`):
 
 ```bash
 npx --yes klaraudit scan "$TARGET_URL" --ci --format json
 ```
+
+---
+
+## 📦 Publishing (maintainers)
+
+Releases are cut from git tags matching `package.json` (for example `v0.1.0`):
+
+1. Add repository secret `NPM_TOKEN` (npm automation token with publish rights).
+2. Push tag `v0.1.0` — the Release workflow publishes to npm and `ghcr.io/shoebill-software/klaraudit`.
+3. Make the GHCR package public under GitHub → Packages if the first push is private.
 
 ---
 

@@ -137,7 +137,12 @@ describe('generatePdfReport', () => {
     expect(written).toBe(resolve(outputPath));
     expect(chromium.launch).toHaveBeenCalledWith({
       headless: true,
-      args: ['--no-sandbox', '--disable-dev-shm-usage'],
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+      ],
     });
     expect(page.setContent).toHaveBeenCalledOnce();
     const [html, setContentOptions] = vi.mocked(page.setContent).mock.calls[0] ?? [];

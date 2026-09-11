@@ -2,11 +2,10 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Handlebars from 'handlebars';
-import { chromium, type Browser } from 'playwright-core';
+import type { Browser } from 'playwright-core';
+import { launchChromium } from '../engine/chromium.js';
 import { DEFAULT_RULES, SEVERITY_PENALTIES } from '../rules/rule-engine.js';
 import type { AuditResult, ComplianceStatus, Severity, Violation } from '../types/index.js';
-
-const PDF_LAUNCH_ARGS = ['--no-sandbox', '--disable-dev-shm-usage'] as const;
 const SCORE_RING_RADIUS = 52;
 const SCORE_RING_CIRCUMFERENCE = 2 * Math.PI * SCORE_RING_RADIUS;
 
@@ -265,10 +264,7 @@ export async function generatePdfReport(result: AuditResult, outputPath: string)
   let browser: Browser | undefined;
 
   try {
-    browser = await chromium.launch({
-      headless: true,
-      args: [...PDF_LAUNCH_ARGS],
-    });
+    browser = await launchChromium();
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle' });
     await page.evaluate('document.fonts.ready');

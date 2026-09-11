@@ -7,7 +7,7 @@ interface Props {
 
 const { lang } = Astro.props;
 const copy = copyFor(lang);
-const lemonLifetime = 'https://fenneq.lemonsqueezy.com/buy/klaraudit-agency-pro';
+const dockerCommand = 'docker run --rm --init --ipc=host ghcr.io/shoebill-software/klaraudit scan https://example.com';
 ---
 
 <section id="license" class="scroll-mt-16 border-b border-slate-300">
@@ -22,55 +22,43 @@ const lemonLifetime = 'https://fenneq.lemonsqueezy.com/buy/klaraudit-agency-pro'
       {copy.pricing.lead}
     </p>
 
-    <div class="mt-8 overflow-x-auto border border-slate-300 bg-white">
-      <table class="w-full min-w-[640px] border-collapse text-left text-sm">
-        <thead class="border-b border-slate-300 bg-[#faf9f5]">
-          <tr>
-            <th class="px-4 py-3 font-mono text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              {copy.pricing.colFeature}
-            </th>
-            <th class="px-4 py-3">
-              <span class="block text-sm font-semibold text-slate-900">{copy.pricing.colFree}</span>
-              <span class="mt-1 block font-mono text-[11px] text-emerald-700">{copy.pricing.freeTag}</span>
-            </th>
-            <th class="px-4 py-3">
-              <span class="block text-sm font-semibold text-slate-900">{copy.pricing.colAgency}</span>
-              <span class="mt-1 block font-mono text-[11px] text-slate-600">{copy.pricing.agencyTag}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {
-            copy.pricing.rows.map((row) => (
-              <tr class="border-t border-slate-200">
-                <th class="px-4 py-3 font-medium text-slate-700">{row.feature}</th>
-                <td class="px-4 py-3 text-slate-600">{row.free}</td>
-                <td class="px-4 py-3 text-slate-600">{row.agency}</td>
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
-    </div>
+    <ul class="mt-8 grid gap-3 sm:grid-cols-2">
+      {
+        copy.pricing.includes.map((item) => (
+          <li class="border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700">
+            {item}
+          </li>
+        ))
+      }
+    </ul>
 
     <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm">
       <a
         href={githubUrl}
         target="_blank"
         rel="noopener noreferrer"
-        class="border border-slate-300 px-3 py-2 text-slate-800 hover:border-slate-900 hover:text-slate-900"
+        class="border border-slate-900 bg-slate-900 px-3 py-2 text-[#faf9f5] hover:bg-slate-800"
       >
         {copy.pricing.ctaGithub}
       </a>
       <a
-        href={lemonLifetime}
+        href="https://www.npmjs.com/package/klaraudit"
         target="_blank"
         rel="noopener noreferrer"
-        class="border border-slate-900 bg-slate-900 px-3 py-2 text-[#faf9f5] hover:bg-slate-800"
+        class="border border-slate-300 px-3 py-2 text-slate-800 hover:border-slate-900 hover:text-slate-900"
       >
-        {copy.pricing.ctaBuy}
+        {copy.pricing.ctaNpm}
       </a>
     </div>
+
+    <div class="mt-8 space-y-3">
+      <p class="font-mono text-[11px] uppercase tracking-[0.14em] text-slate-500">
+        {copy.pricing.commandsLabel}
+      </p>
+      <pre class="overflow-x-auto border border-slate-300 bg-[#faf9f5] px-4 py-3 font-mono text-xs text-slate-800"><code>{copy.pricing.npxCommand}</code></pre>
+      <pre class="overflow-x-auto border border-slate-300 bg-[#faf9f5] px-4 py-3 font-mono text-xs text-slate-800"><code>{dockerCommand}</code></pre>
+    </div>
+
     <p class="mt-4 max-w-2xl text-xs leading-relaxed text-slate-500">
       {copy.pricing.footnote}
     </p>

@@ -3,3 +3,5 @@ dist
 .cursor
 .env*
 .vercel
+*.pdf
+*.tgz
